@@ -1,0 +1,30 @@
+﻿@model Nop.Plugin.Payments.Paytm.Models.CheckOut
+
+@{
+    Layout = "";
+}
+<table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td>
+            @if (@Model.PaytmParams != null && @Model.PaytmParams.Keys != null)
+            {
+                <center>
+                    <p><b>@T("Plugins.Payments.Paytm.Fields.RedirectionTip")</b></p>
+                </center>
+                <form method="post" action="@Model.PaytmURL" name="paytm">
+                    <table border="1">
+                        <tbody>
+                            @foreach (string key in @Model.PaytmParams.Keys)
+                            {
+                                <input type='hidden' name="@key" value="@Model.PaytmParams[key]" />
+                            }
+                        </tbody>
+                    </table>
+                    <script type="text/javascript">
+                        document.paytm.submit();
+                    </script>
+                </form>
+            }
+        </td>
+    </tr>
+</table>
