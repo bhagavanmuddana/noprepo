@@ -8,6 +8,7 @@ namespace Nop.Plugin.Payments.Paytm.Controllers
     {
         public void RegisterRoutes(IEndpointRouteBuilder endpointRouteBuilder)
         {
+            //Return
             endpointRouteBuilder.MapControllerRoute("Plugin.Payments.Paytm.Return", "Plugins/PaymentPaytm/Return", new { controller = "PaymentPaytm", action = "Return" });
         }
 

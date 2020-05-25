@@ -48,6 +48,8 @@ namespace Nop.Plugin.Payments.Paytm.Components
             var paymentRequest = new ProcessPaymentRequest();
             _paymentService.GenerateOrderGuid(paymentRequest);
             paymentRequest.CustomerId = _workContext.CurrentCustomer.Id;
+
+            //creating ppaytm order
             var (paytmParams, checksum) = _serviceManager.CreateOrder(paymentRequest.OrderGuid);
             if (!string.IsNullOrEmpty(checksum))
             {

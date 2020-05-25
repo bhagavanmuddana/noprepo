@@ -138,9 +138,6 @@ namespace Nop.Plugin.Payments.Paytm.Controllers
             if (!ModelState.IsValid)
                 return Configure();
 
-            //load settings for a chosen store scope
-
-
             //save settings
             _paytmPaymentSettings.UseSandbox = model.UseSandbox;
             _paytmPaymentSettings.MId = model.MId;
@@ -195,6 +192,7 @@ namespace Nop.Plugin.Payments.Paytm.Controllers
             if (!IsMinimumOrderPlacementIntervalValid(_workContext.CurrentCustomer))
                 throw new Exception(_localizationService.GetResource("Checkout.MinOrderPlacementInterval"));
 
+            //checking payment success
             if (response.RESPCODE == "01" && response.STATUS == "TXN_SUCCESS" && IsValidTransaction(response.ORDERID.ToString(), response.TXNAMOUNT))
             {
                 //place order
@@ -217,12 +215,13 @@ namespace Nop.Plugin.Payments.Paytm.Controllers
             return RedirectToRoute("OrderDetails", new { orderId = response.ORDERID });
         }
 
-        private bool IsValidTransaction(string orderId, String amount)
+        private bool IsValidTransaction(string orderId, string amount)
         {
             Dictionary<string, string> parameters = new Dictionary<string, string>();
             parameters.Add("MID", _paytmPaymentSettings.MId);
             parameters.Add("ORDERID", orderId);
 
+            //getting checksum of payment
             string checksum = CheckSum.generateCheckSum(_paytmPaymentSettings.MKey, parameters);
             try
             {

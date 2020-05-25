@@ -35,6 +35,10 @@ namespace Nop.Plugin.Payments.Paytm.Services
         private readonly ISettingService _settingService;
         private readonly IWebHelper _webHelper;
         private readonly PaytmPaymentSettings _paytmPaymentSettings;
+        private readonly ICurrencyService _currencyService;
+        private readonly IShoppingCartService _shoppingCartService;
+        private readonly CurrencySettings _currencySettings;
+        private readonly IOrderTotalCalculationService _orderTotalCalculationService;
 
         #endregion
 
@@ -45,13 +49,21 @@ namespace Nop.Plugin.Payments.Paytm.Services
             IStoreContext storeContext,
             IWorkContext workContext,
             ISettingService settingService,
-            IWebHelper webHelper)
+            IWebHelper webHelper,
+            ICurrencyService currencyService,
+            IShoppingCartService shoppingCartService,
+            CurrencySettings currencySettings,
+            IOrderTotalCalculationService orderTotalCalculationService)
         {
             _logger = logger;
             _storeContext = storeContext;
             _workContext = workContext;
             _settingService = settingService;
             _webHelper = webHelper;
+            _currencyService = currencyService;
+            _shoppingCartService = shoppingCartService;
+            _currencySettings = currencySettings;
+            _orderTotalCalculationService = orderTotalCalculationService;
             var storeScope = _storeContext.ActiveStoreScopeConfiguration;
             _paytmPaymentSettings = _settingService.LoadSetting<PaytmPaymentSettings>(storeScope);
         }
@@ -78,20 +90,17 @@ namespace Nop.Plugin.Payments.Paytm.Services
                     _logger.Error("Paytm not configured", null, _workContext.CurrentCustomer);
                 }
 
-                //var currency = _currencyService.GetCurrencyById(_currencySettings.PrimaryStoreCurrencyId)?.CurrencyCode;
-                //if (string.IsNullOrEmpty(currency))
-                //    throw new NopException("Primary store currency not set");
+                var currency = _currencyService.GetCurrencyById(_currencySettings.PrimaryStoreCurrencyId)?.CurrencyCode;
+                if (string.IsNullOrEmpty(currency))
+                    throw new NopException("Primary store currency not set");
 
-                ////prepare purchase unit details
-                //var shoppingCart = _shoppingCartService
-                //    .GetShoppingCart(_workContext.CurrentCustomer, Core.Domain.Orders.ShoppingCartType.ShoppingCart, _storeContext.CurrentStore.Id)
-                //    .ToList();
-                ////var taxTotal = Math.Round(_orderTotalCalculationService.GetTaxTotal(shoppingCart, false), 2);
-                ////var shippingTotal = Math.Round(_orderTotalCalculationService.GetShoppingCartShippingTotal(shoppingCart) ?? decimal.Zero, 2);
-                //var orderTotal = Math.Round(_orderTotalCalculationService.GetShoppingCartTotal(shoppingCart, usePaymentMethodAdditionalFee: false) ?? decimal.Zero, 2);
+                //prepare purchase unit details
+                var shoppingCart = _shoppingCartService
+                    .GetShoppingCart(_workContext.CurrentCustomer, Core.Domain.Orders.ShoppingCartType.ShoppingCart, _storeContext.CurrentStore.Id)
+                    .ToList();
+                var orderTotal = Math.Round(_orderTotalCalculationService.GetShoppingCartTotal(shoppingCart, usePaymentMethodAdditionalFee: false) ?? decimal.Zero, 2);
 
-                var orderTotal = 50;
-
+                //creating checksum
                 var paytmParams = new Dictionary<string, string>();
                 paytmParams.Add("MID", _paytmPaymentSettings.MId);
                 paytmParams.Add("WEBSITE", _paytmPaymentSettings.WebSite);
@@ -102,8 +111,8 @@ namespace Nop.Plugin.Payments.Paytm.Services
                 paytmParams.Add("EMAIL", _workContext.CurrentCustomer.Email);
                 paytmParams.Add("TXN_AMOUNT", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
                 paytmParams.Add("CALLBACK_URL", $"{_webHelper.GetStoreLocation(false)}Plugins/PaymentPaytm/Return");
+                var checksum = CheckSum.generateCheckSum(_paytmPaymentSettings.MKey, paytmParams);
 
-                var checksum = CheckSum.generateCheckSum(_paytmPaymentSettings.MKey, paytmParams); ;
                 return (paytmParams, checksum);
             }
             catch(Exception exception)
