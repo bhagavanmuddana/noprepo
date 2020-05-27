@@ -7,7 +7,8 @@ namespace Nop.Plugin.Payments.Paytm
     /// Represents plugin constants
     /// </summary>
     public class Defaults
-    {   /// <summary>
+    {
+        /// <summary>
         /// Gets the session key to get process payment request
         /// </summary>
         public static string PaymentRequestSessionKey => "OrderPaymentInfo";

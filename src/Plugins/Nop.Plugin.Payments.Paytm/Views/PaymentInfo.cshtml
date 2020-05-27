@@ -21,7 +21,8 @@
                         </tbody>
                     </table>
                     <script type="text/javascript">
-                        document.paytm.submit();
+                        $('.payment-info form').action = @Model.PaytmURL;
+                        $('.payment-info form').submit()
                     </script>
                 </form>
             }

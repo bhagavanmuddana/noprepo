@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>ExternalPayments.Paytm</PackageId>
+    <PackageId>Payments.Paytm</PackageId>
     <Version>1.0.0</Version>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Copyright>Copyright © Nop Solutions, Ltd</Copyright>

@@ -4,7 +4,7 @@ using Nop.Core.Infrastructure;
 using Nop.Core.Infrastructure.DependencyManagement;
 using Nop.Plugin.Payments.Paytm.Services;
 
-namespace Nop.Plugin.Payments.PayPalSmartPaymentButtons.Infrastructure
+namespace Nop.Plugin.Payments.PaytmPayment.Infrastructure
 {
     /// <summary>
     /// Represents a plugin dependency registrar
