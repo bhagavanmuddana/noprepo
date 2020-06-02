@@ -25,7 +25,6 @@ namespace Nop.Plugin.Payments.Stripe.Services
         private readonly IWorkContext _workContext;
         private readonly ISettingService _settingService;
         private readonly IWebHelper _webHelper;
-        private readonly StripePaymentSettings _stripePaymentSettings;
         private readonly ICurrencyService _currencyService;
         private readonly IShoppingCartService _shoppingCartService;
         private readonly CurrencySettings _currencySettings;
@@ -55,27 +54,22 @@ namespace Nop.Plugin.Payments.Stripe.Services
             _shoppingCartService = shoppingCartService;
             _currencySettings = currencySettings;
             _orderTotalCalculationService = orderTotalCalculationService;
-            var storeScope = _storeContext.ActiveStoreScopeConfiguration;
-            _stripePaymentSettings = _settingService.LoadSetting<StripePaymentSettings>(storeScope);
+            
         }
 
         #endregion
 
         #region Methods
 
-        private bool IsConfigured(StripePaymentSettings _paytmPaymentSettings)
-        {
-            return !string.IsNullOrEmpty(_paytmPaymentSettings?.PKey)
-                && !string.IsNullOrEmpty(_paytmPaymentSettings?.SKey);
-        }
-
         public (string, string) CreatePaymentIntent()
         {
             try
             {
-                if (!IsConfigured(_stripePaymentSettings))
+                var storeScope = _storeContext.ActiveStoreScopeConfiguration;
+                var stripePaymentSettings = _settingService.LoadSetting<StripePaymentSettings>(storeScope);
+                if (string.IsNullOrEmpty(stripePaymentSettings?.PKey) || string.IsNullOrEmpty(stripePaymentSettings?.SKey))
                 {
-                    _logger.Error("Paytm not configured", null, _workContext.CurrentCustomer);
+                    _logger.Error("Stripe not configured", null, _workContext.CurrentCustomer);
                 }
 
                 var currency = _currencyService.GetCurrencyById(_currencySettings.PrimaryStoreCurrencyId)?.CurrencyCode;
@@ -87,22 +81,22 @@ namespace Nop.Plugin.Payments.Stripe.Services
                     .GetShoppingCart(_workContext.CurrentCustomer, Core.Domain.Orders.ShoppingCartType.ShoppingCart, _storeContext.CurrentStore.Id)
                     .ToList();
                 var orderTotal = Math.Round(_orderTotalCalculationService.GetShoppingCartTotal(shoppingCart, usePaymentMethodAdditionalFee: false) ?? decimal.Zero, 2);
-                //var totalinINR =
-                //    _currencyService.ConvertCurrency(orderTotal, "INR");
+                //var totalinINR = _currencyService.ConvertCurrency(orderTotal, "INR");
 
                 StripeConfiguration.ApiKey = "sk_test_5HF9bM2OzA9Q26m8MYsAEUQN008rNH4EMZ";
                 var options = new PaymentIntentCreateOptions
                 {
-                    Amount = Convert.ToInt64(orderTotal),
+                    Amount = 100,
                     Currency = "inr",
                     Metadata = new Dictionary<string, string> { { "integration_check", "accept_a_payment" } },
                 };
 
                 var service = new PaymentIntentService();
                 var paymentIntent = service.Create(options);
+                
                 if (paymentIntent != null && !string.IsNullOrEmpty(paymentIntent.ClientSecret))
                 {
-                    return (paymentIntent.ClientSecret, _stripePaymentSettings.PKey);
+                    return (paymentIntent.ClientSecret, "pk_test_5k9slMvVhTM43dedbGuLSPAH008Nk5giFT");
                 }
             }
             catch(Exception exception)
